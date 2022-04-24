@@ -1,6 +1,0 @@
-Please running this file in the root of project <VSD_benchmark>
-/opt/sdb/polyu/VSD_benchmark
-Traceback (most recent call last):
-  File "/opt/sdb/polyu/VSD_benchmark/dataset/dataloader.py", line 14, in <module>
-    joint_transform = joint_transforms.Compose([
-NameError: name 'joint_transforms' is not defined
