@@ -1,0 +1,5 @@
+.idea
+/stat453-deep-learning-ss21
+logs/
+*.ipynb
+
