@@ -1,12 +1,18 @@
-LAUNCH_ID: "GoPro-DeepMotionPrior-Valid-xinTest"
+LAUNCH_ID: "xinTest"
 JOBS: 28
 TEST_ONLY: False
+#TEST_ONLY: True
 LOG_INTERVAL: 5
-TRAIN_BATCH_SIZE: 16
+TRAIN_BATCH_SIZE: 32
 VAL_BATCH_SIZE: 16
-START_EPOCH: 0
-END_EPOCH: 800
+START_EPOCH: x
+END_EPOCH: x
 VAL_INTERVAL: 1
+save_path:
+
+input_features: 173056
+learning_rate: 0.005
+num_epochs: 100
 # training model resume is none
 RESUME:
   PATH:
@@ -14,59 +20,59 @@ RESUME:
 LAUNCHER: "ParallelLaunch"
 SEED: 39
 DEVICE: "cuda"
-OPTIMIZER:
-  # 1. adam
-  NAME: "Adam"
-  #  # 1.1 SGD
-  #  NAME: "SGD"
-  LR: 0.0005
-  # 2. lr scheduler
-  LR_SCHEDULER: cosine
-  end_epoch: 800
-LOSS:
+#OPTIMIZER:
+#  # 1. adam
+#  NAME: "Adam"
+#  #  # 1.1 SGD
+#  #  NAME: "SGD"
+#  LR: 0.0005
+#  # 2. lr scheduler
+#  LR_SCHEDULER: cosine
+#  end_epoch: 800
+#LOSS:
+##  -
+##    NAME: PSNRLoss
+##    WEIGHT: 0.025
+##    value_range: 1.0
+##  -
+##    NAME: SSIMLoss
+##    WEIGHT: 0.9
+##    value_range: 1.0
+##    window_size: 11
 #  -
-#    NAME: PSNRLoss
-#    WEIGHT: 0.025
-#    value_range: 1.0
+#    NAME: L1CharbonnierLossColor
+#    WEIGHT: 1
+#METRICS:
 #  -
-#    NAME: SSIMLoss
-#    WEIGHT: 0.9
+#    NAME: L1
+#  -
+#    NAME: L2
+#  -
+#    NAME: SSIM
 #    value_range: 1.0
 #    window_size: 11
-  -
-    NAME: L1CharbonnierLossColor
-    WEIGHT: 1
-METRICS:
-  -
-    NAME: L1
-  -
-    NAME: L2
-  -
-    NAME: SSIM
-    value_range: 1.0
-    window_size: 11
-  -
-    NAME: PSNR
-    value_range: 255.0
-    centralize: true
-    normalize: true
-DATASET:
-  NAME: GoProDataset
-  root: "/hpc/users/hpcuser06/dataset"
-  long: 5
-  short: 1
-  past: 2
-  future: 2
-  centralize: false
-  patch_height: 512
-  patch_width: 512
-MODEL:
-  NAME: DeMoP
-  n_features: 16
-  future_frames: 2
-  past_frames: 2
-  n_blocks_a: 7
-  activation: "gelu"
-  n_blocks_b: 8
-  do_skip: true
-  device: "cuda"
+#  -
+#    NAME: PSNR
+#    value_range: 255.0
+#    centralize: true
+#    normalize: true
+#DATASET:
+#  NAME: GoProDataset
+#  root: "/hpc/users/hpcuser06/dataset"
+#  long: 5
+#  short: 1
+#  past: 2
+#  future: 2
+#  centralize: false
+#  patch_height: 512
+#  patch_width: 512
+#MODEL:
+#  NAME: DeMoP
+#  n_features: 16
+#  future_frames: 2
+#  past_frames: 2
+#  n_blocks_a: 7
+#  activation: "gelu"
+#  n_blocks_b: 8
+#  do_skip: true
+#  device: "cuda"

@@ -1,14 +1,16 @@
+import numpy as np
+import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-import cv2
+# import cv2
 import matplotlib.pyplot as plt
 import glob
-import numpy
+# import numpy
 import random
-
+from PIL import Image
 # import utils.joint_transforms as joint_transforms
 from torchvision import transforms
-import torch
+
 
 #######################################################
 #               Define Transforms
@@ -79,13 +81,16 @@ class VSD_DataSet(Dataset):
     def __getitem__(self, idx):
         image_filepath = self.image_paths[idx]
 
-        image = cv2.imread(image_filepath)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = cv2.imread(image_filepath)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        image = np.array(Image.open(image_filepath).convert('RGB'))
         labbel_filepath = image_filepath.replace('images','labels').replace(".jpg",".png")
         # print(image_filepath,labbel_filepath)
 
-        label = cv2.imread(labbel_filepath)
-        label = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY)
+        # label = cv2.imread(labbel_filepath)
+        # label = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY)
+        label = np.array(Image.open(labbel_filepath).convert('L'),dtype=np.float32)
+        label[label == 255.0] = 1
         # print('iamge shape: {} label shape: {}'.format(image.shape, label.shape))
         # sample = {'image': image, 'label': label}
         if self.transform_img is not None:
@@ -131,6 +136,7 @@ if __name__ == "__main__":
         print('Image label dimensions:', labels.shape)
         img = images[0]
         lab = labels[0]
+        print(torch.max(lab))
 
 
         f = plt.figure()

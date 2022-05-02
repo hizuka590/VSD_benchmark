@@ -1,7 +1,8 @@
 # VSD_benchmark
 
 ### TODO
-- [ ] dataloader
-- [ ] AE
+- [X] dataloader
+- [X] fully_AE
+- [x] cnn_AE
 - [ ] VAE
 - [ ] VQVAE
