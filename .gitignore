@@ -2,4 +2,6 @@
 /stat453-deep-learning-ss21
 logs/
 *.ipynb
+/detectron2
+/cvd2
 
