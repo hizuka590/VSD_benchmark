@@ -21,6 +21,7 @@ parser.add_argument('--model', type=str, required=True, help='choose a model: cn
 parser.add_argument('--yaml_file', type=str, default='/opt/sdb/polyu/VSD_benchmark/fully_ae.yaml', help='choose a yaml path')
 parser.add_argument('--log_dir', type=str, default='logs', help='define a log path')
 
+
 args = parser.parse_args()
 
 def init_config(yaml_path):
@@ -75,6 +76,7 @@ if __name__ == '__main__':
     if config.MODEL == 'cnn_ae':
         model = x.Model().to(config.DEVICE)
 
+    # test
     init_network(model)
     if config.TEST_ONLY == True:
         print('summary only:')

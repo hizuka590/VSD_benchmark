@@ -50,6 +50,7 @@ def train(config, model, train_iter, dev_iter, test_iter = 'None'):
         print('Epoch [{}/{}]'.format(epoch + 1, config.num_epochs))
         # scheduler.step() # 学习率衰减
         for i, (trains, labels) in enumerate(train_iter):
+            labels[labels > 0] = 1
             if config.MODEL =='fully_ae':
                 trains = trains.view(-1, 416 * 416).to(config.DEVICE)
                 labels = labels.data.reshape(trains.shape[0], -1).to(config.DEVICE)
@@ -64,16 +65,20 @@ def train(config, model, train_iter, dev_iter, test_iter = 'None'):
             # print('output shape: ',outputs.shape)
             model.zero_grad()
             loss = F.binary_cross_entropy(outputs, labels)
-            print(loss.item())
+            # print(loss.item())
             loss.backward()
             optimizer.step()
-            num_correct = 0
+
             if total_batch % 100 == 0:
                 print('start validation============')
                 # 每多少轮输出在训练集和验证集上的效果
+                num_correct = 0
+                num_pixels = 0
+                dice_score = 0
                 predic = (outputs > 0.5).float().to(config.DEVICE)
                 num_correct += (predic == labels).sum()
                 num_pixels += torch.numel(predic)
+
                 train_acc = num_correct / num_pixels
                 dev_acc, dev_dice = evaluate(config, model, dev_iter)
                 # if dev_loss < dev_best_loss:
@@ -89,7 +94,8 @@ def train(config, model, train_iter, dev_iter, test_iter = 'None'):
                 writer.add_scalar("loss/train", loss.item(), total_batch)
                 # writer.add_scalar("loss/dev", dev_loss, total_batch)
                 writer.add_scalar("acc/train", train_acc, total_batch)
-                writer.add_scalar("acc/dev", dev_acc, total_batch)
+                writer.add_scalar("acc/validation", dev_acc, total_batch)
+                writer.add_scalar("dice/validation", dev_dice, total_batch)
                 model.train()
             total_batch += 1
         #     if total_batch - last_improve > config.require_improvement:
@@ -135,9 +141,7 @@ def evaluate(config, model, data_iter, test=False):
             if config.MODEL =='cnn_ae':
                 trains = trains.to(config.DEVICE)
                 labels = labels.to(config.DEVICE)
-            # print('input shape: ', trains.shape)
-            # print('input shape: ', inputs.shape)
-            # print('labels shape: ', labels.shape)
+
             outputs = model(trains)
             predic = (outputs > 0.5).float().to(config.DEVICE)
             num_correct += (predic == labels).sum()
@@ -168,6 +172,9 @@ def summary(config, model, train_iter, dev_iter, test_iter = 'None'):
     from torchsummary import summary
     for i, (trains, labels) in enumerate(train_iter):
         print('train size :',trains.shape)
-        print('label size : ',labels.shape)
+        print('label size : ',labels.shape,labels[0].view(-1).shape)
+        #  trasnform below not work on get_item..
+        labels[labels>0] = 1
+        print('number of classes: ',set(labels[0].view(-1).tolist()))
         summary(model,trains.shape[1:])
         break

@@ -6,7 +6,9 @@ from utils.visualization import visualize_depth_dir
 # Change based on your output path.
 # output_dir = "baby_wave1_run_output"
 # output_dir = "book2_run_output"
-output_dir = "crossing_run_output"
+# output_dir = "crossing_run_output"
+# output_dir = "hand-shake_run_output"
+output_dir = "walk_dog_run_output"
 
 
 depth_midas_dir = osp.join("/opt/sdb/polyu/VSD_benchmark/cvd2", output_dir, "depth_midas2/depth")

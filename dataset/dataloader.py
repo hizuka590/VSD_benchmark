@@ -90,7 +90,9 @@ class VSD_DataSet(Dataset):
         # label = cv2.imread(labbel_filepath)
         # label = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY)
         label = np.array(Image.open(labbel_filepath).convert('L'),dtype=np.float32)
-        label[label == 255.0] = 1
+        # x = labels[0]
+        label[label>0]=1
+        # label[label > 0] = 1
         # print('iamge shape: {} label shape: {}'.format(image.shape, label.shape))
         # sample = {'image': image, 'label': label}
         if self.transform_img is not None:
@@ -132,6 +134,13 @@ if __name__ == "__main__":
     # )
     # Checking the dataset
     for images, labels in train_loader:
+        print('train size :',images.shape)
+        print('label size : ',labels.shape,labels[0].view(-1).shape)
+        # x = labels[0]
+        # x[x>0]=1
+        print('number of classes: ',set(labels[0].view(-1).tolist()))
+        # print('number of classes after trasnform: ', set(x[0].view(-1).tolist()))
+
         print('Image batch dimensions:', images.shape)
         print('Image label dimensions:', labels.shape)
         img = images[0]
@@ -143,7 +152,7 @@ if __name__ == "__main__":
         f.add_subplot(2, 2, 1)
         plt.imshow(img.permute(1, 2, 0), aspect='auto')
         f.add_subplot(2, 2, 2)
-        plt.imshow(lab.permute(1, 2, 0), aspect='auto')
+        plt.imshow(lab.permute(1, 2, 0), aspect='auto',cmap='gray')
         plt.show()
         break
 
