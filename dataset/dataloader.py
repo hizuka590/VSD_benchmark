@@ -2,30 +2,25 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
-# import cv2
 import matplotlib.pyplot as plt
 import glob
-# import numpy
 import random
 from PIL import Image
-# import utils.joint_transforms as joint_transforms
 from torchvision import transforms
-
+import torchvision
 
 #######################################################
 #               Define Transforms
 #######################################################
-# transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
-
 transform_img = transforms.Compose([transforms.ToPILImage(),
                                 transforms.Resize((416,416)),
                                 #transforms.PILToTensor()])
-                                transforms.ToTensor()]
+                                transforms.ToTensor(),
+                                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
                                 )
-transform_label = transforms.Compose([transforms.ToPILImage(),
+transform_label = transforms.Compose([
                                 transforms.Resize((416,416)),
-                                #transforms.PILToTensor()])
-                                transforms.ToTensor()])
+                                transforms.ToTensor()]) # range [0, 255] -> [0.0,1.0]
 
 #######################################################
 #               Define train,val,test sets path
@@ -51,7 +46,7 @@ def get_alldata_path(train_image_path, type='train'):
     return list_image_paths
 
 #######################################################
-#               Define exposure fundtion
+#               Define exposure fundaion
 #######################################################
 def get_dataset(transform_on=True):
     train_image_path = '/opt/sdb/polyu/VSD_dataset/train/images'
@@ -80,53 +75,48 @@ class VSD_DataSet(Dataset):
 
     def __getitem__(self, idx):
         image_filepath = self.image_paths[idx]
-
-        # image = cv2.imread(image_filepath)
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         image = np.array(Image.open(image_filepath).convert('RGB'))
         labbel_filepath = image_filepath.replace('images','labels').replace(".jpg",".png")
-        # print(image_filepath,labbel_filepath)
 
-        # label = cv2.imread(labbel_filepath)
-        # label = cv2.cvtColor(label, cv2.COLOR_BGR2GRAY)
-        label = np.array(Image.open(labbel_filepath).convert('L'),dtype=np.float32)
-        # x = labels[0]
-        label[label>0]=1
-        # label[label > 0] = 1
+        # label_before = np.array(Image.open(labbel_filepath).convert('L'),dtype=np.float32)
+        label = (Image.open(labbel_filepath).convert('L'))
+        # print('number of classes1: ', set(np.array(label).flatten().tolist()))
+        # # x = labels[0]
+        # label[label <= 0.5] = 0
+        # label[label > 0.5] = 1
+        # print('number of classes2: ', set(np.array(label).flatten().tolist()))
         # print('iamge shape: {} label shape: {}'.format(image.shape, label.shape))
         # sample = {'image': image, 'label': label}
         if self.transform_img is not None:
             image = self.transform_img(image)
         if self.transform_label is not None:
             label = self.transform_label(label)
+        # print('number of classes3: ', set(label.flatten().tolist()))
         # print('transformed iamge shape: {} label shape: {}'.format(image.shape, label.shape))
         return image, label
 
-#######################################################
-#               Define Dataset Class
-#######################################################
+def imshow(inp, title=None):
+    """Imshow for Tensor."""
+    inp = inp.numpy().transpose((1, 2, 0))
 
-if __name__ == "__main__":
-    # app.run(main)
-    train_image_path = '/opt/sdb/polyu/VSD_dataset/train/images'
-    valid_image_path = '/opt/sdb/polyu/VSD_dataset/test/images'
-    #######################################################
-    #                  Create Dataset
-    #######################################################
 
+    inp = np.clip(inp, 0, 1)
+    plt.imshow(inp)
+    if title is not None:
+        plt.title(title)
+    plt.pause(0.001)  # pause a bit so that plots are updated
+
+#######################################################
+#               Define unit_test
+#######################################################
+def unit_test():
     train_dataset,valid_dataset= get_dataset()
-
-
-    #######################################################
-    #                  Define Dataloaders
-    #######################################################
-
     train_loader = DataLoader(
-        train_dataset, batch_size=64, shuffle=True
+        train_dataset, batch_size=16, shuffle=True
     )
 
     valid_loader = DataLoader(
-        valid_dataset, batch_size=64, shuffle=True
+        valid_dataset, batch_size=16, shuffle=True
     )
 
     # test_loader = DataLoader(
@@ -136,23 +126,32 @@ if __name__ == "__main__":
     for images, labels in train_loader:
         print('train size :',images.shape)
         print('label size : ',labels.shape,labels[0].view(-1).shape)
-        # x = labels[0]
-        # x[x>0]=1
         print('number of classes: ',set(labels[0].view(-1).tolist()))
-        # print('number of classes after trasnform: ', set(x[0].view(-1).tolist()))
 
         print('Image batch dimensions:', images.shape)
         print('Image label dimensions:', labels.shape)
         img = images[0]
         lab = labels[0]
-        print(torch.max(lab))
+        lab[lab > 0.5] = 1
+        lab[lab <= 0.5] = 0
+        print('number of classes after 0/1: ', set(lab.view(-1).tolist()))
+        print(torch.max(labels))
 
+        # f = plt.figure()
+        # f.add_subplot(2, 2, 1)
+        # plt.imshow(img.permute(1, 2, 0), aspect='auto')
+        # f.add_subplot(2, 2, 2)
+        # plt.imshow(lab.permute(1, 2, 0), aspect='auto',cmap='gray')
+        # plt.show()
 
-        f = plt.figure()
-        f.add_subplot(2, 2, 1)
-        plt.imshow(img.permute(1, 2, 0), aspect='auto')
-        f.add_subplot(2, 2, 2)
-        plt.imshow(lab.permute(1, 2, 0), aspect='auto',cmap='gray')
-        plt.show()
+        out = torchvision.utils.make_grid(images)
+        imshow(out, title=[i for i in range(0,8)])
+        out2 = torchvision.utils.make_grid(labels)
+        imshow(out2, title='labels')
+        out3 = torchvision.utils.make_grid(lab)
+        imshow(out3, title='lab')
         break
 
+
+if __name__ == "__main__":
+    unit_test()

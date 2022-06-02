@@ -65,6 +65,7 @@ def test():
     model = Model()
     preds = model(x)
     print(preds)
+    print(preds.max(), preds.min())
     assert preds.shape == (3,1,416,416)
 
 if __name__ == "__main__":

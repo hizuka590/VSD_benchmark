@@ -50,14 +50,16 @@ def train(config, model, train_iter, dev_iter, test_iter = 'None'):
         print('Epoch [{}/{}]'.format(epoch + 1, config.num_epochs))
         # scheduler.step() # 学习率衰减
         for i, (trains, labels) in enumerate(train_iter):
-            labels[labels > 0] = 1
+            labels[labels > 0.5] = 1
+            labels[labels <= 0.5] = 0
             if config.MODEL =='fully_ae':
                 trains = trains.view(-1, 416 * 416).to(config.DEVICE)
                 labels = labels.data.reshape(trains.shape[0], -1).to(config.DEVICE)
-            if config.MODEL =='cnn_ae':
-                # print('cnn:===================')
+            if config.MODEL =='cnn_ae' or config.MODEL == 'unet':
+                # print('cnn/unet:===================')
                 trains = trains.to(config.DEVICE)
                 labels = labels.float().to(config.DEVICE)
+
             # print('input shape: ', trains.shape)
             # print('input shape: ', trains.shape)
             outputs = model(trains)
@@ -135,10 +137,12 @@ def evaluate(config, model, data_iter, test=False):
     dice_score = 0
     with torch.no_grad():
         for trains, labels in data_iter:
+            labels[labels > 0.5] = 1
+            labels[labels <= 0.5] = 0
             if config.MODEL =='fully_ae':
                 trains = trains.view(-1, 416 * 416).to(config.DEVICE)
                 labels = labels.data.reshape(trains.shape[0], -1).to(config.DEVICE)
-            if config.MODEL =='cnn_ae':
+            if config.MODEL =='cnn_ae' or config.MODEL == 'unet':
                 trains = trains.to(config.DEVICE)
                 labels = labels.to(config.DEVICE)
 
@@ -167,6 +171,39 @@ def evaluate_one(config, model, data_iter, test=False):
             print("question desc: ", texts)
             print("ground truth label: ", labels)
             print("predicted label : ", outputs)
+
+def cal_precision_recall_mae(prediction, gt):
+    # input should be np array with data type uint8
+    assert prediction.dtype == np.uint8
+    assert gt.dtype == np.uint8
+    assert prediction.shape == gt.shape
+
+    eps = 1e-4
+
+    prediction = prediction / 255.
+    gt = gt / 255.
+
+    mae = np.mean(np.abs(prediction - gt))
+
+    hard_gt = np.zeros(prediction.shape)
+    hard_gt[gt > 0.5] = 1
+    t = np.sum(hard_gt)
+
+    precision, recall = [], []
+    # calculating precision and recall at 255 different binarizing thresholds
+    for threshold in range(256):
+        threshold = threshold / 255.
+
+        hard_prediction = np.zeros(prediction.shape)
+        hard_prediction[prediction > threshold] = 1
+
+        tp = np.sum(hard_prediction * hard_gt)
+        p = np.sum(hard_prediction)
+
+        precision.append((tp + eps) / (p + eps))
+        recall.append((tp + eps) / (t + eps))
+
+    return precision, recall, mae
 
 def summary(config, model, train_iter, dev_iter, test_iter = 'None'):
     from torchsummary import summary
