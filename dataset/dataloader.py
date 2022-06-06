@@ -132,8 +132,8 @@ def unit_test():
         print('Image label dimensions:', labels.shape)
         img = images[0]
         lab = labels[0]
-        lab[lab > 0.5] = 1
-        lab[lab <= 0.5] = 0
+        labels[labels > 0.5] = 1
+        labels[labels <= 0.5] = 0
         print('number of classes after 0/1: ', set(lab.view(-1).tolist()))
         print(torch.max(labels))
 
